@@ -6,15 +6,15 @@ class ToastSMS
     private $api_key; /* Api app key */
     private $user_agent; /* User-agent */
     private $host = "https://api-sms.cloud.toast.com"; /* Toast api domain */
-    private $path; /* url path */
+    private $path; /* Url path */
     private $method; /* GET 0 / POST 1 */
     private $version; /* Api version */
     private $rejectionNumber; /* Rejection number(console > 080 rejection setting) */
     private $content; /* Data */
     private $result; /* Api Result */
-    private $error; /* error Message */
-    private $authMsg = "인증"; /* default = AUTH_REQUIRED_MSG_KR */
-    private $language = "KR"; /* default = KR */
+    private $error; /* Error Message */
+    private $authMsg = "인증"; /* Default = AUTH_REQUIRED_MSG_KR */
+    private $language = "KR"; /* Default = KR */
 
     public const AUTH = "AUTH";
     public const AD = "AD";
@@ -324,5 +324,273 @@ class ToastSMS
         foreach ($options as $key=>$value){
             $this->content[$key] = $value;
         }
+    }
+}
+
+class ToastSMSOption
+{
+    private $body;
+    private $templateId; /* Template ID */
+    private $requestDate; /* Request date and time  */
+    private $senderGroupingKey; /* Sender's group key */
+    private array $attachFileIdList; /* Attached file included, for MMS*/
+    private $userId; /* User ID */
+    private $statsId; /* Statistics ID */
+    private array  $tagExpression; /* Tag expression, for TAG message */
+    private $adYn; /* Ad or not (default: N), for MMS, for TAG message*/
+    private $autoSendYn; /* Auto delivery or not (immediate delivery) (default: Y), for MMS, for TAG message */
+
+    public function __construct($text)
+    {
+        $this->body = $text;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTemplateId()
+    {
+        return $this->templateId;
+    }
+
+    /**
+     * @param mixed $templateId
+     */
+    public function setTemplateId($templateId): void
+    {
+        $this->templateId = $templateId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRequestDate()
+    {
+        return $this->requestDate;
+    }
+
+    /**
+     * @param mixed $requestDate
+     */
+    public function setRequestDate($requestDate): void
+    {
+        $this->requestDate = $requestDate;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSenderGroupingKey()
+    {
+        return $this->senderGroupingKey;
+    }
+
+    /**
+     * @param mixed $senderGroupingKey
+     */
+    public function setSenderGroupingKey($senderGroupingKey): void
+    {
+        $this->senderGroupingKey = $senderGroupingKey;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttachFileIdList(): array
+    {
+        return $this->attachFileIdList;
+    }
+
+    /**
+     * @param array $attachFileIdList
+     */
+    public function setAttachFileIdList(array $attachFileIdList): void
+    {
+        $this->attachFileIdList = $attachFileIdList;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUserId()
+    {
+        return $this->userId;
+    }
+
+    /**
+     * @param mixed $userId
+     */
+    public function setUserId($userId): void
+    {
+        $this->userId = $userId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getStatsId()
+    {
+        return $this->statsId;
+    }
+
+    /**
+     * @param mixed $statsId
+     */
+    public function setStatsId($statsId): void
+    {
+        $this->statsId = $statsId;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTagExpression(): array
+    {
+        return $this->tagExpression;
+    }
+
+    /**
+     * @param array $tagExpression
+     */
+    public function setTagExpression(array $tagExpression): void
+    {
+        $this->tagExpression = $tagExpression;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAdYn()
+    {
+        return $this->adYn;
+    }
+
+    /**
+     * @param mixed $adYn
+     */
+    public function setAdYn($adYn): void
+    {
+        $this->adYn = $adYn;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAutoSendYn()
+    {
+        return $this->autoSendYn;
+    }
+
+    /**
+     * @param mixed $autoSendYn
+     */
+    public function setAutoSendYn($autoSendYn): void
+    {
+        $this->autoSendYn = $autoSendYn;
+    }
+}
+
+class ToastMMSOption extends ToastSMSOption
+{
+    private $title;
+
+    public function __construct($title, $text)
+    {
+        $this->title = $title;
+        parent::__construct($text);
+    }
+}
+
+class ToastSMSRecipient
+{
+    private $recipientNo; /* Recipient number, required */
+    private $countryCode; /* Country code [Default: 82 (Korea)] */
+    private $internationalRecipientNo; /* Recipient number including country code */
+    private array $templateParameter; /* Template parameter (with the input of template ID), key-value */
+    private $recipientGroupingKey; /* Recipient group key */
+
+    public function __construct($recipientNo)
+    {
+        $this->recipientNo = $recipientNo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRecipientNo()
+    {
+        return $this->recipientNo;
+    }
+
+    /**
+     * @param mixed $recipientNo
+     */
+    public function setRecipientNo($recipientNo): void
+    {
+        $this->recipientNo = $recipientNo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCountryCode()
+    {
+        return $this->countryCode;
+    }
+
+    /**
+     * @param mixed $countryCode
+     */
+    public function setCountryCode($countryCode): void
+    {
+        $this->countryCode = $countryCode;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getInternationalRecipientNo()
+    {
+        return $this->internationalRecipientNo;
+    }
+
+    /**
+     * @param mixed $internationalRecipientNo
+     */
+    public function setInternationalRecipientNo($internationalRecipientNo): void
+    {
+        $this->internationalRecipientNo = $internationalRecipientNo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTemplateParameter()
+    {
+        return $this->templateParameter;
+    }
+
+    /**
+     * @param mixed $templateParameter
+     */
+    public function setTemplateParameter($templateParameter): void
+    {
+        $this->templateParameter = $templateParameter;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRecipientGroupingKey()
+    {
+        return $this->recipientGroupingKey;
+    }
+
+    /**
+     * @param mixed $recipientGroupingKey
+     */
+    public function setRecipientGroupingKey($recipientGroupingKey): void
+    {
+        $this->recipientGroupingKey = $recipientGroupingKey;
     }
 }
