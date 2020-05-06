@@ -44,10 +44,10 @@ class ToastSMS
     private const AD_REQUIRED_MSG_FIRST_JP = "(広告)";
     private const AD_REQUIRED_MSG_SECOND_JP = "[無料受信拒否]";
 
-    public function __construct($apiKey, $sendNo, $version= "2.3")
+    public function __construct($apiKey, $sender, $version= "2.3")
     {
         $this->api_key = $apiKey;
-        $this->content["sendNo"] = $sendNo;
+        $this->content["sendNo"] = $sender;
         $this->version = $version;
 
         if(isset($_SERVER['HTTP_USER_AGENT']))
