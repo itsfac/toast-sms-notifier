@@ -18,7 +18,6 @@ $recipientList = array();
 $recipient = new ToastSMSRecipient("01012345678");
 array_push($recipientList, $recipient);
 ```
-<br>
 <h4>3. Send message </h4>
 
 - SMS
@@ -86,8 +85,9 @@ $toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_PASSWORD_KR);
 ```
 
 - Language
-
-  Available to set language.(default : KR), AD message set by language 
+  (default : KR)
+  
+  Available to set language, AD message set by language 
 ```
 $toastSMS->setLanguage(ToastSMS::KR);
 $toastSMS->setLanguage(ToastSMS::EN);
