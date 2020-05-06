@@ -53,7 +53,7 @@ $toastSMS->sendMMS($recipientList, $mmsOption);
 $rejectionNumber = "08012345678"; // rejection number (console > 080 rejection setting)
 $toastSMS->sendAdMMS($recipientList, $mmsOption, $rejectionNumber);
 
-/* Send Tag SMS, tag expression array */
+/* Send Tag LMS, tag expression array */
 $tagExpressionList = array("tag1", "tag2");
 $mmsOption->setTagExpression($tagExpressionList);
 $toastSMS->sendTagLMS($recipientList, $mmsOption);
