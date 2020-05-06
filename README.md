@@ -3,99 +3,93 @@
 🔗 Toast SMS api Document : https://docs.toast.com/ko/Notification/SMS/ko/api-guide/
 <br><br>
 
+<h4>1. Create instance of ToastSMS class </h4>
 
 ```
-/* case1 */ 
-$toastSMS = new toastSMS($api_key, $sendNo); // toast api key, calling number
+$toastSMS = new ToastSMS("api-key", "sender phone number");
+```
 
-/* case2 : you can set api version, default = 2.3 */ 
-$version = "2.3";
-$toastSMS = new toastSMS($api_key, $sendNo, $version);
-```
-```
-/* recipient number is required as array */
-$phoneNumList = array("010********"); 
-```
-<br>
+<h4>2. Create array of recipient's information </h4>
 
-- Send Short SMS
 ```
-  $toastSMS->sendSMS($text, $phoneNumList, $options=null);
+$recipientList = array();
+
+// recipient's information, available to set options
+$recipient = new ToastSMSRecipient("01012345678");
+array_push($recipientList, $recipient);
 ```
+<h4>3. Send message </h4>
+
+- SMS
 ```
-  $toastSMS->sendSMS("text", $phoneNumList);
+/* Toast SMS Options, required text(message content), available to set other options */
+$smsOption = new ToastSMSOption("text");
+
+/* Send SMS */
+$toastSMS->sendSMS($recipientList, $smsOption);
+
+/* Send Auth SMS, required auth message */
+$toastSMS->sendAuthSMS($recipientList, $smsOption, ToastSMS::AUTH);
+
+/* Send Ad SMS, required rejection number */
+$rejectionNumber = "08012345678"; // rejection number (console > 080 rejection setting)
+$toastSMS->sendAdSMS($recipientList, $smsOption, $rejectionNumber);
+
+/* Send Tag SMS, tag expression array */
+$tagExpressionList = array("tag1", "tag2");
+$smsOption->setTagExpression($tagExpressionList);
+$toastSMS->sendTagSMS($recipientList, $smsOption);
+```
+
+- MMS
+```
+/* Toast MMS Options, required text(message content), title, available to set other options */
+$mmsOption = new ToastSMSOption("text", "title");
+
+/* Send MMS */
+$toastSMS->sendMMS($recipientList, $mmsOption);
+
+/* Send Ad MMS, required rejection number */
+$rejectionNumber = "08012345678"; // rejection number (console > 080 rejection setting)
+$toastSMS->sendAdMMS($recipientList, $mmsOption, $rejectionNumber);
+
+/* Send Tag LMS, tag expression array */
+$tagExpressionList = array("tag1", "tag2");
+$mmsOption->setTagExpression($tagExpressionList);
+$toastSMS->sendTagLMS($recipientList, $mmsOption);
+```
+
+<br><hr><br>
+- Auth message list 
+```
+// auth
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_EN);
+
+// 인증 (default)
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_KR);
+
+// にんしょう
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_JP);
+
+// 認証
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_CN);
+
+// verif
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_VERIF);
+
+// password
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_PASSWORD);
+
+// 비밀번호
+$toastSMS->setAuthMsg(ToastSMS::AUTH_REQUIRED_MSG_PASSWORD_KR);
+```
+
+- Language
+  (default : KR)
   
-  /* Send SMS for Authentication */
-  // The text about authentication is required to send AUTH message(constant), declared in ToastSMS
-  $toastSMS->sendAuthSMS("text", $phoneNumList, toastSMS::AUTH_REQUIRED_MSG_KR);
-  
-  /* Send SMS for Advertisement */
-  $rejectionNumber = "080********"; // required, rejection number(console > 080 rejection setting)
-  $toastSMS->sendAdSMS("text", $phoneNumList, $rejectionNumber);
-  
-  /* Send Tagged SMS */
-  $tagExpression = array("tag1", "tag2"); // required, tag array
-  $toastSMS->sendTagSMS("text", $phoneNumList, $tagExpression);
+  Available to set language, AD message set by language 
 ```
-
-<br>
-
-- Send Long MMS
-```
-  $toastSMS->sendSMS($title, $text, $phoneNumList, $options=null);
-```
-```
-  $toastSMS->sendMMS("title", "text", $phoneNumList);
-  
-  /* Send MMS for Advertisement */
-  $rejectionNumber = "080********"; // required, rejection number(console > 080 rejection setting)
-  $toastSMS->sendAdMMS("title", "text", $phoneNumList, $rejectionNumber);
-  
-  /* Send Tagged MMS */
-  $tagExpression = array("tag1", "tag2"); // required, tag array
-  $toastSMS->sendTagLMS("title", "text", $phoneNumList, $tagExpression);
-```
-<br>
-
-- Send SMS/MMS with options
-
-```
-  $options = new StdClass();
-  $options->templateId = "Template ID";
-  
-  $toastSMS->sendSMS("", $phoneNumList, $options);
-  $toastSMS->sendMMS("", "", $phoneNumList, $options);
-  $toastSMS->sendAdSMS("", $phoneNumList, $rejectionNumber, $options);
-                              .
-                              .
-                              .
-```
-
-<br>
-
-- Send SMS/MMS by type<br>
-  Type(constant) is declared in ToastSMS
-```
-  $toastSMS->send($msgType, $type, $text, $phoneNumList, $options=null);
-```
-```
- $toastSMS->send(ToastSMS::SMS, ToastSMS::SMS, "text", $phoneNumList);
- 
- /* Send SMS for Authentication */
- $toastSMS->send(ToastSMS::SMS, ToastSMS::AUTH, "text", $phoneNumList);
- 
- /* Send SMS for Advertisement */
- $toastSMS->send(ToastSMS::SMS, ToastSMS::AD, "text", $phoneNumList);
- 
- /* When you send MMS, required title in options */
- $options = new StdClass();
- $options->title = "title";
- 
- $toastSMS->send(ToastSMS::MMS, ToastSMS::MMS, "text", $phoneNumList, $options);
- 
- /* Send MMS for Advertisement */
- $toastSMS->send(ToastSMS::MMS, ToastSMS::AD, "text", $phoneNumList, $options);
-                               .
-                               .
-                               .
+$toastSMS->setLanguage(ToastSMS::KR);
+$toastSMS->setLanguage(ToastSMS::EN);
+$toastSMS->setLanguage(ToastSMS::JP);
 ```
