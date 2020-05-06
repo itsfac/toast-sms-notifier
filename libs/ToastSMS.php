@@ -95,12 +95,19 @@ class ToastSMS
      * @param string $type
      * @param ToastSMSRecipient[] $recipientList
      * @param ToastSMSOption $option
+     * @param string $text
+     * @param null|string $title
      * @return $this
      */
-    public function send($msgType, $type, array $recipientList, ToastSMSOption $option){
+    private function send($msgType, $type, array $recipientList, $option, $text, $title=null){
 
         $this->content["recipientList"] = $this->setRecipientToArray($recipientList);
-        $option = $this->setBodyOfOptionsByType($type, $option);
+        $this->content["body"] = $text;
+        if(!empty($title)){
+            $this->content["title"] = $title;
+        }
+
+        $option = $this->setBodyOfOptionsByType($text, $type, $option);
         $this->setOptionsToContent($option);
         $this->setMethod($this->getPathByType($type, $msgType), 1);
         $this->curlProcess();
@@ -110,87 +117,97 @@ class ToastSMS
 
     /**
      * send basic SMS
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendSMS(array $recipientList, ToastSMSOption $option){
-        $this->send(self::SMS, self::SMS, $recipientList, $option);
+    public function sendSMS($text, array $recipientList, ToastSMSOption $option=null){
+        $this->send(self::SMS, self::SMS, $recipientList, $option, $text);
         return $this;
     }
 
     /**
      * send SMS for Authentication(emergency)
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
+     * @param string $authMsg
      * @param ToastSMSOption $option
-     * @param $authMsg
      * @return $this
      */
-    public function sendAuthSMS(array $recipientList, ToastSMSOption $option, $authMsg){
+    public function sendAuthSMS($text, array $recipientList, $authMsg, ToastSMSOption $option=null){
         $this->authMsg = $authMsg;
 
-        $this->send(self::SMS, self::AUTH, $recipientList, $option);
+        $this->send(self::SMS, self::AUTH, $recipientList, $option, $text);
         return $this;
     }
 
     /**
      * send SMS for Advertisement
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
+     * @param string $rejectionNumber
      * @param ToastSMSOption $option
-     * @param $rejectionNumber
      * @return $this
      */
-    public function sendAdSMS(array $recipientList, ToastSMSOption $option, $rejectionNumber){
+    public function sendAdSMS($text, array $recipientList, $rejectionNumber, ToastSMSOption $option=null){
         $this->rejectionNumber = $rejectionNumber;
 
-        $this->send(self::SMS, self::AD, $recipientList, $option);
+        $this->send(self::SMS, self::AD, $recipientList, $option, $text);
         return $this;
     }
 
     /**
      * send Tagged SMS
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendTagSMS(array $recipientList, ToastSMSOption $option){
-        $this->send(self::SMS, self::TAG, $recipientList, $option);
+    public function sendTagSMS($text, array $recipientList, ToastSMSOption $option){
+        $this->send(self::SMS, self::TAG, $recipientList, $option, $text);
         return $this;
     }
 
     /**
      * send basic MMS
+     * @param string $title
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendMMS(array $recipientList, ToastSMSOption $option){
-        $this->send(self::MMS, self::MMS, $recipientList, $option);
+    public function sendMMS($title, $text, array $recipientList, ToastSMSOption $option=null){
+        $this->send(self::MMS, self::MMS, $recipientList, $option, $text, $title);
         return $this;
     }
 
     /**
      * send MMS for Advertisement
+     * @param string $title
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
+     * @param string $rejectionNumber
      * @param ToastSMSOption $option
-     * @param $rejectionNumber
      * @return $this
      */
-    public function sendAdMMS(array $recipientList, ToastSMSOption $option, $rejectionNumber){
+    public function sendAdMMS($title, $text, array $recipientList, $rejectionNumber, ToastSMSOption $option=null){
         $this->rejectionNumber = $rejectionNumber;
 
-        $this->send(self::MMS, self::AD, $recipientList, $option);
+        $this->send(self::MMS, self::AD, $recipientList, $option, $text, $title);
         return $this;
     }
 
     /**
      * send Tagged LMS
+     * @param string $title
+     * @param string $text
      * @param ToastSMSRecipient[] $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendTagLMS(array $recipientList, ToastSMSOption $option){
-        $this->send(self::MMS, self::TAG, $recipientList, $option);
+    public function sendTagLMS($title, $text, array $recipientList, ToastSMSOption $option){
+        $this->send(self::MMS, self::TAG, $recipientList, $option, $text, $title);
         return $this;
     }
 
@@ -223,36 +240,53 @@ class ToastSMS
 
     /**
      * set required content by type(auth, ad ...)
+     * @param string $text
      * @param $type
      * @param ToastSMSOption $option
      * @return ToastSMSOption
      */
-    private function setBodyOfOptionsByType($type, ToastSMSOption $option){
-        $text = $option->getBody();
-        if(empty($option->getTemplateId())){
-            if(strcmp($type, self::AD) == 0){
-                if(strcmp($this->language, self::JP) == 0){
-                    $text = self::AD_REQUIRED_MSG_FIRST_JP.$text."\n"
-                        .self::AD_REQUIRED_MSG_SECOND_JP.$this->rejectionNumber;
-                } else if(strcmp($this->language, self::EN) == 0){
-                    $text = self::AD_REQUIRED_MSG_FIRST_EN.$text."\n"
-                        .self::AD_REQUIRED_MSG_SECOND_EN.$this->rejectionNumber;
-                } else{
-                    $text = self::AD_REQUIRED_MSG_FIRST_KR.$text."\n"
-                        .self::AD_REQUIRED_MSG_SECOND_KR.$this->rejectionNumber;
-                }
-            } else if(strcmp($type,self::AUTH) == 0){
-                $text = "(".$this->authMsg.") ".$text;
+    private function setBodyOfOptionsByType($text, $type, ToastSMSOption $option=null){
+        if(!empty($option)){
+            if(empty($option->getTemplateId())){
+                $text = $this->addRequiredTextByType($text, $type);
             }
+        } else {
+            $text = $this->addRequiredTextByType($text, $type);
         }
 
-        $option->setBody($text);
+        $this->content["body"] = $text;
         return $option;
+    }
+
+    /**
+     * Add required text to send message(type Auth, AD)
+     * @param $text
+     * @param $type
+     * @return string
+     */
+    private function addRequiredTextByType($text, $type){
+        if(strcmp($type, self::AD) == 0){
+            if(strcmp($this->language, self::JP) == 0){
+                $text = self::AD_REQUIRED_MSG_FIRST_JP.$text."\n"
+                    .self::AD_REQUIRED_MSG_SECOND_JP.$this->rejectionNumber;
+            } else if(strcmp($this->language, self::EN) == 0){
+                $text = self::AD_REQUIRED_MSG_FIRST_EN.$text."\n"
+                    .self::AD_REQUIRED_MSG_SECOND_EN.$this->rejectionNumber;
+            } else{
+                $text = self::AD_REQUIRED_MSG_FIRST_KR.$text."\n"
+                    .self::AD_REQUIRED_MSG_SECOND_KR.$this->rejectionNumber;
+            }
+        } else if(strcmp($type,self::AUTH) == 0){
+            $text = "(".$this->authMsg.") ".$text;
+        }
+
+        return $text;
     }
 
     /**
      * get url path by type(auth, ad ..)
      * @param string $type
+     * @param string $msgType
      * @return string
      */
     private function getPathByType($type, $msgType){
@@ -284,10 +318,12 @@ class ToastSMS
 
     /**
      * set option data to content(array)
-     * @param ToastSMSOption $options
+     * @param ToastSMSOption $option
      */
-    private function setOptionsToContent(ToastSMSOption $options){
-        $this->content = array_merge($this->content, $options->objectToArray());
+    private function setOptionsToContent(ToastSMSOption $option=null){
+        if(!empty($option)){
+            $this->content = array_merge($this->content, $option->objectToArray());
+        }
     }
 
     /**
@@ -307,8 +343,6 @@ class ToastSMS
 
 class ToastSMSOption
 {
-    private $title;
-    private $body;
     private $templateId; /* Template ID */
     private $requestDate; /* Request date and time  */
     private $senderGroupingKey; /* Sender's group key */
@@ -318,47 +352,6 @@ class ToastSMSOption
     private $tagExpression; /* Tag expression, for TAG message, type(Array) */
     private $adYn; /* Ad or not (default: N), for MMS, for TAG message*/
     private $autoSendYn; /* Auto delivery or not (immediate delivery) (default: Y), for MMS, for TAG message */
-
-    public function __construct($text, $title = null)
-    {
-        $this->body = $text;
-
-        if(!empty($title)){
-            $this->title = $title;
-        }
-    }
-
-    /**
-     * @return null
-     */
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
-    /**
-     * @param null $title
-     */
-    public function setTitle($title): void
-    {
-        $this->title = $title;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getBody()
-    {
-        return $this->body;
-    }
-
-    /**
-     * @param mixed $body
-     */
-    public function setBody($body): void
-    {
-        $this->body = $body;
-    }
 
     /**
      * @return mixed
@@ -507,14 +500,6 @@ class ToastSMSOption
     public function objectToArray ()
     {
         $smsOptionArray = array();
-
-        if(!empty($this->title)){
-            $smsOptionArray["title"] = $this->title;
-        }
-
-        if(!empty($this->body)){
-            $smsOptionArray["body"] = $this->body;
-        }
 
         if(!empty($this->templateId)){
             $smsOptionArray["templateId"] = $this->templateId;
