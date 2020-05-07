@@ -43,6 +43,7 @@ class ToastSMS
     private const AD_REQUIRED_MSG_SECOND_EN = "[Reject receiving ads charge-free]";
     private const AD_REQUIRED_MSG_FIRST_JP = "(広告)";
     private const AD_REQUIRED_MSG_SECOND_JP = "[無料受信拒否]";
+    private const RECIPIENT_TYPE_ERROR_MSG = "TypeError, Recipient list must be String(phone number) or String Array(phone number array) or Object Array(ToastSMSRecipient class)";
 
     public function __construct($apiKey, $sender, $version= "2.3")
     {
@@ -93,36 +94,89 @@ class ToastSMS
      * send Message
      * @param string $msgType
      * @param string $type
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param ToastSMSOption $option
      * @param string $text
      * @param null|string $title
      * @return $this
      */
-    private function send($msgType, $type, array $recipientList, $option, $text, $title=null){
+    private function send($msgType, $type, $recipientList, $option, $text, $title=null){
+        $recipientList = $this->isRecipientTypeCorrect($recipientList);
+        if(!empty($recipientList)){
+            $this->content["recipientList"] = $this->setRecipientToArray($recipientList);
+            $this->content["body"] = $text;
+            if(!empty($title)){
+                $this->content["title"] = $title;
+            }
 
-        $this->content["recipientList"] = $this->setRecipientToArray($recipientList);
-        $this->content["body"] = $text;
-        if(!empty($title)){
-            $this->content["title"] = $title;
+            $option = $this->setBodyOfOptionsByType($text, $type, $option);
+            $this->setOptionsToContent($option);
+            $this->setMethod($this->getPathByType($type, $msgType), 1);
+            $this->curlProcess();
+        } else {
+            $this->error["resultMessage"] = self::RECIPIENT_TYPE_ERROR_MSG;
         }
-
-        $option = $this->setBodyOfOptionsByType($text, $type, $option);
-        $this->setOptionsToContent($option);
-        $this->setMethod($this->getPathByType($type, $msgType), 1);
-        $this->curlProcess();
 
         return $this;
     }
 
     /**
+     * Check type of RecipientList 
+     * @param $recipientList
+     * @return array|null
+     */
+    private function isRecipientTypeCorrect($recipientList){
+        $result = true;
+        $formattedRecipientList = array();
+        if(gettype($recipientList) == "array"){
+            foreach ($recipientList as $recipient){
+                if(gettype($recipient) == "string"){
+                    if(preg_match("/[0-9]/", $recipient)){
+                        $toastSMSRecipient = new ToastSMSRecipient($recipient);
+                        array_push($formattedRecipientList, $toastSMSRecipient);
+                    } else {
+                        $result = false;
+                        break;
+                    }
+                } else if (is_object($recipient) == "object"){
+                    break;
+                } else {
+                    $result = false;
+                    break;
+                }
+            }
+        } else if(gettype($recipientList) == "string"){
+            if(preg_match("/[0-9]/", $recipientList)){
+                $toastSMSRecipient = new ToastSMSRecipient($recipientList);
+                array_push($formattedRecipientList, $toastSMSRecipient);
+            } else {
+                $result = false;
+            }
+        } else if(gettype($recipientList) == "object") {
+            array_push($formattedRecipientList, $recipientList);
+        } else {
+            $result = false;
+        }
+
+        if(!$result){
+            return NULL;
+        } else {
+            if(empty($formattedRecipientList)){
+                return $recipientList;
+            } else {
+                return $formattedRecipientList;
+            }
+        }
+    }
+
+    /**
      * send basic SMS
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendSMS($text, array $recipientList, ToastSMSOption $option=null){
+    public function sendSMS($text, $recipientList, ToastSMSOption $option=null){
         $this->send(self::SMS, self::SMS, $recipientList, $option, $text);
         return $this;
     }
@@ -130,12 +184,12 @@ class ToastSMS
     /**
      * send SMS for Authentication(emergency)
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param string $authMsg
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendAuthSMS($text, array $recipientList, $authMsg, ToastSMSOption $option=null){
+    public function sendAuthSMS($text, $recipientList, $authMsg, ToastSMSOption $option=null){
         $this->authMsg = $authMsg;
 
         $this->send(self::SMS, self::AUTH, $recipientList, $option, $text);
@@ -145,12 +199,12 @@ class ToastSMS
     /**
      * send SMS for Advertisement
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param string $rejectionNumber
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendAdSMS($text, array $recipientList, $rejectionNumber, ToastSMSOption $option=null){
+    public function sendAdSMS($text, $recipientList, $rejectionNumber, ToastSMSOption $option=null){
         $this->rejectionNumber = $rejectionNumber;
 
         $this->send(self::SMS, self::AD, $recipientList, $option, $text);
@@ -160,11 +214,11 @@ class ToastSMS
     /**
      * send Tagged SMS
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendTagSMS($text, array $recipientList, ToastSMSOption $option){
+    public function sendTagSMS($text, $recipientList, ToastSMSOption $option){
         $this->send(self::SMS, self::TAG, $recipientList, $option, $text);
         return $this;
     }
@@ -173,11 +227,11 @@ class ToastSMS
      * send basic MMS
      * @param string $title
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendMMS($title, $text, array $recipientList, ToastSMSOption $option=null){
+    public function sendMMS($title, $text, $recipientList, ToastSMSOption $option=null){
         $this->send(self::MMS, self::MMS, $recipientList, $option, $text, $title);
         return $this;
     }
@@ -186,12 +240,12 @@ class ToastSMS
      * send MMS for Advertisement
      * @param string $title
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param string $rejectionNumber
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendAdMMS($title, $text, array $recipientList, $rejectionNumber, ToastSMSOption $option=null){
+    public function sendAdMMS($title, $text, $recipientList, $rejectionNumber, ToastSMSOption $option=null){
         $this->rejectionNumber = $rejectionNumber;
 
         $this->send(self::MMS, self::AD, $recipientList, $option, $text, $title);
@@ -202,11 +256,11 @@ class ToastSMS
      * send Tagged LMS
      * @param string $title
      * @param string $text
-     * @param ToastSMSRecipient[] $recipientList
+     * @param array|string $recipientList
      * @param ToastSMSOption $option
      * @return $this
      */
-    public function sendTagLMS($title, $text, array $recipientList, ToastSMSOption $option){
+    public function sendTagLMS($title, $text, $recipientList, ToastSMSOption $option){
         $this->send(self::MMS, self::TAG, $recipientList, $option, $text, $title);
         return $this;
     }
