@@ -6,8 +6,8 @@ class ToastSMS
     private $api_key; /* Api app key */
     private $sender; /* Message Sender */
     private $user_agent; /* User-agent */
-    private $host = "https://api-sms.cloud.toast.com"; /* Toast api domain */
-    private $kakaoTalkBizMessageHost = "https://api-alimtalk.cloud.toast.com"; /* KakaoTalk Biz Message Toast api domain */
+    private $host = "https://sms.api.nhncloudservice.com"; /* Toast api domain */
+    private $kakaoTalkBizMessageHost = "https://kakaotalk-bizmessage.api.nhncloudservice.com"; /* KakaoTalk Biz Message Toast api domain */
     private $kakaoTalkSecretKey; /*Toast KakaoTalk BizMessage secret key(console)*/
     private $path; /* Url path */
     private $method; /* GET 0 / POST 1 */
